@@ -1,0 +1,128 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.yml
+#
+# Services:
+#   redis    — Redis 7 with persistence and memory limits
+#   api      — Express HTTP server (server.js)
+#   worker   — BullMQ background worker (worker.js)
+#
+# All three services share the "micro_url_net" bridge network so they can
+# reach each other by service name (e.g. redis://redis:6379).
+#
+# EC2 deployment notes:
+#   1. Copy .env.example → .env and fill in the real values on the instance.
+#   2. Set REDIS_URL=redis://redis:6379 (service name, NOT localhost).
+#   3. Run:  docker compose up -d --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: micro_url_redis
+    restart: unless-stopped
+
+    # Persist data to a named volume so jobs/cache survive container restarts
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --loglevel notice
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - micro_url_net
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── API (HTTP server) ───────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: micro_url_api
+    restart: unless-stopped
+
+    # Override CMD from Dockerfile to explicitly start the HTTP server
+    command: ["node", "server.js"]
+
+    env_file:
+      - .env
+
+    environment:
+      # Override the REDIS_URL so it points to the redis service name,
+      # not localhost (which is meaningless inside a container).
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+
+    ports:
+      # Map host port 4000 → container port 4000.
+      # On EC2 open port 4000 in the Security Group, OR put Nginx in front.
+      - "4000:4000"
+
+    networks:
+      - micro_url_net
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── Worker (BullMQ background processor) ───────────────────────────────────
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: micro_url_worker
+    restart: unless-stopped
+
+    # Override CMD to run the worker process instead of the HTTP server
+    command: ["node", "worker.js"]
+
+    env_file:
+      - .env
+
+    environment:
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+
+    networks:
+      - micro_url_net
+
+    depends_on:
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Named volumes
+# ─────────────────────────────────────────────────────────────────────────────
+volumes:
+  redis_data:
+    driver: local
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Networks
+# ─────────────────────────────────────────────────────────────────────────────
+networks:
+  micro_url_net:
+    driver: bridge

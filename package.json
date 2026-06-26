@@ -4,7 +4,10 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "dev:worker": "nodemon worker.js",
+    "start": "node server.js",
+    "start:worker": "node worker.js"
   },
   "keywords": [],
   "author": "",
