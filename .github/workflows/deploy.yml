@@ -37,3 +37,5 @@ jobs:
             docker compose up -d --build --remove-orphans
 
             docker image prune -af
+
+            
