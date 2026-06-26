@@ -2,12 +2,12 @@ import supabase from "../../configs/supabase.js";
 
 const TABLE = "clicks";
 
-export async function getClicksByUserId(userId, days = 7) {
+export async function getClicksByUserId(userId, days = 7, linkIds = null) {
   const dateStr = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
   // Supabase does not support joining easily from a non-foreign key without views sometimes,
   // but `clicks` has `link_id`, and `links` has `user_id`.
   // Wait, `clicks` doesn't have `user_id`. We have to join with `links`.
-  const { data, error } = await supabase
+  let query = supabase
     .from("clicks")
     .select(`
       *,
@@ -15,6 +15,12 @@ export async function getClicksByUserId(userId, days = 7) {
     `)
     .eq("links.user_id", userId)
     .gte("clicked_at", dateStr);
+
+  if (linkIds && linkIds.length > 0) {
+    query = query.in("link_id", linkIds);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return data || [];

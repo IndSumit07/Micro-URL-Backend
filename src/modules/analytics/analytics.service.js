@@ -1,7 +1,7 @@
 import * as analyticsRepository from "./analytics.repository.js";
 
-export async function getDashboardAnalytics(userId, days = 7) {
-  const clicks = await analyticsRepository.getClicksByUserId(userId, days);
+export async function getDashboardAnalytics(userId, days = 7, linkIds = null) {
+  const clicks = await analyticsRepository.getClicksByUserId(userId, days, linkIds);
   
   // Compute timeseries
   const timeSeriesMap = {};
