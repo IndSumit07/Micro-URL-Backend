@@ -27,6 +27,7 @@ import { errorHandler } from "./middlewares/errorHandler.middleware.js";
 import { generalLimiter } from "./middlewares/rateLimiter.middleware.js";
 
 import linksRouter from "./modules/links/links.routes.js";
+import redirectRouter from "./modules/redirect/redirect.routes.js";
 
 import ApiError from "./utils/ApiError.js";
 import { HTTP_STATUS } from "./shared/constants/app.constants.js";
@@ -101,6 +102,16 @@ app.get("/api/health", (_req, res) => {
 
 /** Links module */
 app.use("/api/links", linksRouter);
+
+/**
+ * Redirect module — mounted at root so short URLs resolve as:
+ *   GET <BASE_URL>/:shortCode  →  302 <long_url>
+ *
+ * ⚠️  This router MUST be registered AFTER all /api routes.
+ *    Express matches routes top-to-bottom; mounting it here ensures the
+ *    wildcard `/:shortCode` parameter never intercepts /api/* traffic.
+ */
+app.use("/", redirectRouter);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 7. 404 handler (must come after all valid routes)

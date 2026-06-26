@@ -93,6 +93,26 @@ export const createLinkLimiter = rateLimit({
 });
 
 /**
+ * Redirect rate limiter – applied specifically to GET /:shortCode.
+ *
+ * Redirect traffic is the highest-volume endpoint in a URL shortener.
+ * We apply a generous limit to allow legitimate users/bots to follow links
+ * without friction, while still blocking brute-force enumeration attacks.
+ *
+ * Limits each IP to 500 requests per 15 minutes in production.
+ * In development the limit is relaxed to 2 000 to avoid friction during testing.
+ *
+ * @type {import('express').RequestHandler}
+ */
+export const redirectLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isDev ? 2000 : 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: makeHandler("redirect"),
+});
+
+/**
  * Strict rate limiter – for sensitive endpoints (auth flows, admin ops).
  *
  * Limits each IP to 10 requests per 15 minutes.
