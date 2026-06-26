@@ -27,6 +27,7 @@ import { errorHandler } from "./middlewares/errorHandler.middleware.js";
 import { generalLimiter } from "./middlewares/rateLimiter.middleware.js";
 
 import linksRouter from "./modules/links/links.routes.js";
+import analyticsRouter from "./modules/analytics/analytics.routes.js";
 import redirectRouter from "./modules/redirect/redirect.routes.js";
 
 import ApiError from "./utils/ApiError.js";
@@ -102,6 +103,9 @@ app.get("/api/health", (_req, res) => {
 
 /** Links module */
 app.use("/api/links", linksRouter);
+
+/** Analytics module */
+app.use("/api/analytics", analyticsRouter);
 
 /**
  * Redirect module — mounted at root so short URLs resolve as:

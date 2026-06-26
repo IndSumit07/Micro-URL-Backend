@@ -40,7 +40,12 @@ export function validate(schema, source = "body") {
     }
 
     // Replace raw request data with the Zod-parsed (coerced/stripped) version
-    req[source] = result.data;
+    if (source === "body") {
+      req.body = result.data;
+    } else {
+      Object.keys(req[source]).forEach((key) => delete req[source][key]);
+      Object.assign(req[source], result.data);
+    }
     return next();
   };
 }
