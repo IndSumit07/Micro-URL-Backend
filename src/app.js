@@ -28,6 +28,7 @@ import { generalLimiter } from "./middlewares/rateLimiter.middleware.js";
 
 import linksRouter from "./modules/links/links.routes.js";
 import analyticsRouter from "./modules/analytics/analytics.routes.js";
+import statsRouter from "./modules/stats/stats.routes.js";
 import redirectRouter from "./modules/redirect/redirect.routes.js";
 
 import ApiError from "./utils/ApiError.js";
@@ -106,6 +107,9 @@ app.use("/api/links", linksRouter);
 
 /** Analytics module */
 app.use("/api/analytics", analyticsRouter);
+
+/** Public stats module */
+app.use("/api/stats", statsRouter);
 
 /**
  * Redirect module — mounted at root so short URLs resolve as:

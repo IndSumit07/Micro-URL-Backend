@@ -97,7 +97,7 @@ function detectDeviceType(userAgent) {
  * @throws Will throw on a Supabase error so BullMQ can schedule a retry.
  */
 async function processClickJob(job) {
-  const { linkId, shortCode, ip, userAgent, referer, timestamp } = job.data;
+  const { linkId, shortCode, ip, userAgent, referer, timestamp, redirect_ms } = job.data;
 
   logger.debug("Processing click job", {
     jobId: job.id,
@@ -123,6 +123,7 @@ async function processClickJob(job) {
       user_agent:  userAgent ?? null,
       referrer:    referer   ?? null,
       device_type: detectDeviceType(userAgent),
+      redirect_ms: redirect_ms ?? null,
     }),
   ]);
 

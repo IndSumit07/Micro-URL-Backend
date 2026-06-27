@@ -41,10 +41,20 @@ export async function getDashboardAnalytics(userId, days = 7, linkIds = null) {
   const topLinks = Object.values(linkStats).sort((a, b) => b.clicks - a.clicks);
   const topLink = topLinks.length > 0 ? topLinks[0].title : "None";
 
+  // Compute avg redirect speed from real redirect_ms measurements
+  // Filter out nulls and obvious outliers (> 5s = anomaly)
+  const validMs = clicks
+    .map(c => c.redirect_ms)
+    .filter(ms => ms != null && ms > 0 && ms < 5000);
+  const avgRedirectMs = validMs.length > 0
+    ? Math.round(validMs.reduce((sum, ms) => sum + ms, 0) / validMs.length)
+    : null;
+
   return {
     totalClicks: clicks.length,
     uniqueVisitors: uniqueIps.size,
     topLink,
-    timeSeries
+    timeSeries,
+    avgRedirectMs,
   };
 }

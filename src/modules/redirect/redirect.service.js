@@ -138,17 +138,23 @@ export async function resolveShortCode(shortCode, clickContext = {}) {
  * @returns {Promise<void>}
  */
 async function enqueueClickEvent(link, clickContext = {}) {
+  const redirect_ms = clickContext.requestStart
+    ? Date.now() - clickContext.requestStart
+    : null;
+
   await clickQueue.add("click", {
-    linkId:    link.id,
-    shortCode: link.short_code,
-    ip:        clickContext.ip        ?? null,
-    userAgent: clickContext.userAgent ?? null,
-    referer:   clickContext.referer   ?? null,
-    timestamp: new Date().toISOString(),
+    linkId:      link.id,
+    shortCode:   link.short_code,
+    ip:          clickContext.ip        ?? null,
+    userAgent:   clickContext.userAgent ?? null,
+    referer:     clickContext.referer   ?? null,
+    timestamp:   new Date().toISOString(),
+    redirect_ms,
   });
 
   logger.debug("Click event enqueued", {
-    linkId:    link.id,
-    shortCode: link.short_code,
+    linkId:      link.id,
+    shortCode:   link.short_code,
+    redirect_ms,
   });
 }
