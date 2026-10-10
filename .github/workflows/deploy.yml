@@ -15,21 +15,19 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.2
-
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
+          username: ${{ secrets.EC2_USER || secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 10m
-
           script: |
             set -e
 
-            cd ~/Micro-URL-Backend
+            cd ~/micro-url-server
 
             git fetch origin
             git reset --hard origin/main
@@ -37,5 +35,3 @@ jobs:
             docker compose up -d --build --remove-orphans
 
             docker image prune -af
-
-            

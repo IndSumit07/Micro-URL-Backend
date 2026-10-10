@@ -36,6 +36,9 @@ import { HTTP_STATUS } from "./shared/constants/app.constants.js";
 
 const app = express();
 
+// Trust reverse proxy (Caddy) for real IP in X-Forwarded-For headers
+app.set("trust proxy", 1);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Security middleware
 // ─────────────────────────────────────────────────────────────────────────────
@@ -82,14 +85,7 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 5. Global rate limiter
-// ─────────────────────────────────────────────────────────────────────────────
-
-/** Apply a broad rate limit to all /api/* routes */
-app.use("/api", generalLimiter);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 6. Routes
+// 5. Health Check (before rate limiting and other middlewares)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Health-check endpoint — no auth, no rate limiting */
@@ -101,6 +97,17 @@ app.get("/api/health", (_req, res) => {
     environment: process.env.NODE_ENV ?? "development",
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. Global rate limiter
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Apply a broad rate limit to all /api/* routes */
+app.use("/api", generalLimiter);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. Routes
+// ─────────────────────────────────────────────────────────────────────────────
 
 /** Links module */
 app.use("/api/links", linksRouter);

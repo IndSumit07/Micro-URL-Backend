@@ -51,6 +51,7 @@ import { bullMQConnection } from "./connection.js";
  */
 export const clickQueue = new Queue(QUEUE_NAMES.CLICKS, {
   connection: bullMQConnection,
+  prefix: "micro-url",
 
   defaultJobOptions: {
     /**

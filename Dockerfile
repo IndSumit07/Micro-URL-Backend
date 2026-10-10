@@ -40,7 +40,7 @@ EXPOSE 4000
 
 # Healthcheck — polls the /api/health endpoint every 30 s
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-  CMD wget -qO- http://localhost:4000/api/health || exit 1
+  CMD wget -qO- http://127.0.0.1:4000/api/health || exit 1
 
 # Default command: start the HTTP server
 # The worker is started via a separate service in docker-compose.yml

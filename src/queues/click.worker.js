@@ -173,6 +173,7 @@ async function processClickJob(job) {
 const clickWorker = new Worker(QUEUE_NAMES.CLICKS, processClickJob, {
   connection: bullMQConnection,
   concurrency: 5,
+  prefix: "micro-url",
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
