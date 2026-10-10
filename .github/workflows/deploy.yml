@@ -25,7 +25,7 @@ jobs:
           script: |
             set -e
 
-            cd ~/micro-url-server
+            cd ~/Micro-URL-Backend
 
             git fetch origin main
             git reset --hard origin/main
