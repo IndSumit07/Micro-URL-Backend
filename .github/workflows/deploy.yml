@@ -2,36 +2,35 @@ name: Deploy Backend
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
-  group: production
-  cancel-in-progress: true
+  group: deploy-micro-url-server
+  cancel-in-progress: false
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER || secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          command_timeout: 10m
+          command_timeout: 20m
           script: |
             set -e
 
             cd ~/micro-url-server
 
-            git fetch origin
+            git fetch origin main
             git reset --hard origin/main
 
             docker compose up -d --build --remove-orphans
 
-            docker image prune -af
+            docker image prune -f
+            docker compose ps
