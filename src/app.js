@@ -44,23 +44,59 @@ app.set("trust proxy", 1);
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Set security-related HTTP headers (Content-Security-Policy, X-Frame-Options, etc.) */
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2. CORS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Allow cross-origin requests.
- * TODO: Replace `origin: *` with a whitelist before going to production.
- */
+const configuredOrigins = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((o) => o.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
+const allowedOrigins = [
+  "https://microurl-three.vercel.app",
+  "https://micro.sumoraai.in",
+  ...configuredOrigins,
+];
+
 app.use(
   cors({
-    origin: process.env.NODE_ENV === "production"
-      ? process.env.FRONTEND_URL || false
-      : "*",
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: (origin, callback) => {
+      // Allow non-browser requests (curl, server-to-server, health checks)
+      if (!origin) return callback(null, true);
+
+      const cleanOrigin = origin.trim().replace(/\/+$/, "");
+
+      if (
+        process.env.NODE_ENV !== "production" ||
+        configuredOrigins.includes("*") ||
+        allowedOrigins.includes(cleanOrigin) ||
+        cleanOrigin.endsWith(".vercel.app") ||
+        /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(null, false);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+      "Access-Control-Request-Method",
+      "Access-Control-Request-Headers",
+    ],
+    optionsSuccessStatus: 200,
   }),
 );
 

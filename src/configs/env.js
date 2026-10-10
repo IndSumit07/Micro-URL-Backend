@@ -22,4 +22,5 @@ export const env = {
   supabaseJwksUrl: process.env.SUPABASE_JWKS_URL,
   redisUrl: process.env.REDIS_URL,
   baseUrl: process.env.BASE_URL,
+  frontendUrl: process.env.FRONTEND_URL,
 };
